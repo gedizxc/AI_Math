@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数学奥赛题解答助手</title>
+    
+    <!-- MathJax 配置 -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style> * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* 使用综合.jpeg作为主背景 */
+            background: url('/static/images/book.jpeg') center center/cover no-repeat fixed;
+            /* 添加半透明遮罩以确保内容可读性 */
+            background-blend-mode: overlay;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+
+
+        /* 页面左上角logo */
+        .top-left-logo {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .top-left-logo img {
+            height: 70px;
+            width: auto;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        /* 页面右上角校训文字 */
+        .top-right-motto {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .motto-text {
+            font-family: 'STXingkai', '华文行楷', 'KaiTi', '楷体', 'Microsoft YaHei', '微软雅黑', serif;
+            font-size: 48px;
+            font-weight: normal;
+            color: #2c5aa0;
+            line-height: 1.4;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.6);
+        }
+
+        .motto-line1 {
+            margin-bottom: 2px;
+        }
+
+        .motto-line2 {
+            margin-left: calc(2em + 20px); /* 第二行缩进：原有缩进 + 额外20px */
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 850px;
+            height: 82vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 聊天窗口左上角logo */
+        .chat-logo {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .chat-logo img {
+            height: 50px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #ffee86 0%, #392d47 100%);
+            color: white;
+            padding: 20px 20px 20px 90px; /* 左边留出logo空间 */
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .competition-info {
+            margin-top: 12px;
+            opacity: 0.95;
+            font-size: 14px;
+            line-height: 1.3;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        .competition-info .line1 {
+            margin-bottom: 2px;
+        }
+
+        .competition-info .line2 {
+            font-weight: 500;
+            color: #f0f8ff;
+        }
+
+        .university-info {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(248, 249, 250, 0.9);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.ai {
+            width: 100%;
+        }
+
+        .message-wrapper {
+            display: flex;
+            width: 100%;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            flex: 1;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.ai .message-content {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        .message-tags {
+            width: 150px;
+            flex-shrink: 0;
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            background: rgba(245, 245, 245, 0.95);
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            backdrop-filter: blur(5px);
+            align-self: flex-start;
+        }
+
+        .tags-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .detected-types {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 8px;
+            min-height: 60px;
+        }
+
+        .type-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 2px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .type-placeholder {
+            color: #999;
+            font-size: 11px;
+            text-align: center;
+            padding: 8px;
+            font-style: italic;
+        }
+
+
+
+        .message.ai .message-content.math {
+            font-family: 'Times New Roman', serif;
+            background: rgba(248, 249, 255, 0.95);
+            border-left: 4px solid #667eea;
+        }
+
+        /* MathJax 样式优化 */
+        .message.ai .message-content .MathJax {
+            font-size: 1.1em;
+        }
+
+        .message.ai .message-content .MathJax_Display {
+            margin: 1em 0;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(224, 224, 224, 0.5);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: 2px solid rgba(224, 224, 224, 0.7);
+            border-radius: 25px;
+            padding: 15px 20px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            resize: none;
+            min-height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+            font-size: 18px;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: loading 1.4s infinite ease-in-out;
+        }
+
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes loading {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            animation: typing 1s infinite;
+        }
+
+        @keyframes typing {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .top-left-logo img {
+                height: 60px;
+            }
+
+            .motto-text {
+                font-size: 38px;
+            }
+
+            .chat-container {
+                height: 90vh;
+                max-width: 100%;
+            }
+
+            .chat-header {
+                padding: 15px 15px 15px 70px;
+            }
+
+            .chat-header h1 {
+                font-size: 24px;
+            }
+
+            .competition-info {
+                font-size: 12px;
+            }
+
+            .chat-logo img {
+                height: 40px;
+            }
+
+            .university-info {
+                font-size: 12px;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .message-tags {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-left-logo {
+                top: 10px;
+                left: 10px;
+            }
+
+            .top-right-motto {
+                top: 10px;
+                right: 10px;
+            }
+
+            .top-left-logo img {
+                height: 50px;
+            }
+
+                         .motto-text {
+                 font-size: 32px;
+             }
+
+             .motto-line2 {
+                 margin-left: calc(1.5em + 15px); /* 小屏幕上：减少缩进 + 额外15px */
+             }
+
+            .chat-header {
+                padding: 12px 12px 12px 60px;
+            }
+
+            .chat-header h1 {
+                font-size: 20px;
+            }
+
+            .competition-info {
+                font-size: 11px;
+                margin-top: 8px;
+            }
+
+            .chat-logo img {
+                height: 35px;
+            }
+        }
+
+        /* 欢迎消息样式 */
+        .welcome-message {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .welcome-message h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .welcome-message p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .welcome-examples {
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .welcome-examples h4 {
+            color: #764ba2;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .welcome-examples ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .welcome-examples li {
+            background: rgba(255, 255, 255, 0.7);
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #555;
+            border-left: 3px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面左上角logo -->
+    <div class="top-left-logo">
+    </div>
+
+    <!-- 页面右上角校训 -->
+    <div class="top-right-motto">
+        <div class="motto-text">
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <!-- 聊天窗口左上角logo -->
+        <div class="chat-logo">
+        </div>
+
+        <div class="chat-header">
+            <h1>数学奥赛题解答助手</h1>
+            <p>基于DeepSeek AI的专业数学竞赛题目解答系统</p>
+            <div class="competition-info">
+                <div class="line2">"人工智能+" 赛道</div>
+            </div>
+            <div class="university-info"></div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <h3>🎓 欢迎使用数学奥赛题解答助手</h3>
+                <p>我是您的专业数学竞赛助手，擅长解答各类奥数题目</p>
+                <p>支持详细的解题步骤、多种解法分析和LaTeX数学公式渲染</p>
+                
+                <div class="welcome-examples">
+                    <h4>📝 示例题目：</h4>
+                    <ul>
+                        <li>已知 a + b = 1，a² + b² = 4，求 a³ + b³ 的值</li>
+                        <li>证明：对于任意正整数n，n³ - n能被6整除</li>
+                        <li>在△ABC中，AB=5，BC=12，AC=13，求△ABC的面积</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="请输入您的数学奥赛题目..."
+                    rows="1"
+                ></textarea>
+                <button id="sendButton" class="send-button">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        
+        let isLoading = false;
+
+        // 自动调整输入框高度
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // 发送消息
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message || isLoading) return;
+
+            // 添加用户消息
+            addMessage(message, 'user');
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+
+            // 发送到服务器（流式）
+            sendStreamMessage(message);
+        }
+
+        // 流式发送消息
+        function sendStreamMessage(message) {
+            isLoading = true;
+            sendButton.disabled = true;
+            
+            // 添加AI消息容器
+            const aiMessageElement = addMessage('', 'ai');
+            const contentElement = aiMessageElement.querySelector('.message-content');
+            currentAIMessageElement = aiMessageElement;
+            
+            // 添加加载指示器
+            contentElement.innerHTML = '<div class="loading">正在思考中<div class="loading-dots"><span></span><span></span><span></span></div></div>';
+            
+            fetch('/api/chat/stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let aiResponse = '';
+                
+                // 清除加载指示器
+                contentElement.innerHTML = '';
+                
+                function readStream() {
+                    return reader.read().then(({ done, value }) => {
+                        if (done) {
+                            isLoading = false;
+                            sendButton.disabled = false;
+                            
+                            // 最终更新
+                            updateAIMessage(contentElement, aiResponse, false);
+                            console.log('Stream done, final aiResponse:', aiResponse);
+                            return;
+                        }
+                        
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // 保留最后一个不完整的行
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const data = line.slice(6);
+                                if (data === '[DONE]') {
+                                    isLoading = false;
+                                    sendButton.disabled = false;
+                                    // 在流式结束时，最终更新消息并更新标签
+                                    updateAIMessage(contentElement, aiResponse, false);
+                                    console.log('Stream completed, final aiResponse:', aiResponse);
+                                    return;
+                                }
+                                
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    if (parsed.content) {
+                                        aiResponse += parsed.content;
+                                        updateAIMessage(contentElement, aiResponse, true); // 流式更新
+                                        
+                                        // 在流式过程中检测题目类型
+                                        checkTypesInStream(aiResponse, aiMessageElement);
+                                        
+                                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                                    } else if (parsed.error) {
+                                        contentElement.innerHTML = `<span style="color: red;">错误: ${parsed.error}</span>`;
+                                        isLoading = false;
+                                        sendButton.disabled = false;
+                                        return;
+                                    }
+                                } catch (e) {
+                                    console.log('JSON parse error:', e);
+                                }
+                            }
+                        }
+                        
+                        return readStream();
+                    });
+                }
+                
+                return readStream();
+            })
+            .then(() => {
+                // 最终更新，移除光标效果 - 不需要再次调用，因为在readStream的done分支已经调用过了
+                console.log('Stream completed');
+            })
+            .catch(error => {
+                // 保留已渲染的内容，在末尾添加错误信息
+                const errorMsg = `<br><span style="color: red;">网络错误: ${error && error.message ? error.message : String(error)}</span>`;
+                if (contentElement.innerHTML.trim()) {
+                    contentElement.innerHTML += errorMsg;
+                } else {
+                    contentElement.innerHTML = `<span style="color: red;">网络错误: ${error && error.message ? error.message : String(error)}</span>`;
+                }
+                isLoading = false;
+                sendButton.disabled = false;
+            });
+        }
+
+        // 更新题目类型显示
+        function updateTags(text, messageElement) {
+            if (!text || !text.trim()) {
+                console.log('updateTags: empty text, skip');
+                return;
+            }
+            console.log('Full text to search:', text.substring(0, 200) + '...');
+            
+            // 查找题目类型标记 - 使用更宽松的正则表达式
+            let typeMatch = text.match(/【题目类型[：:]\s*([^】]+)】/);
+            
+            // 如果没有匹配到，尝试其他可能的格式
+            if (!typeMatch) {
+                typeMatch = text.match(/\[题目类型[：:]\s*([^\]]+)\]/);
+            }
+            if (!typeMatch) {
+                typeMatch = text.match(/题目类型[：:]\s*([^\n\r，,。.]+)/);
+            }
+            
+            console.log('typeMatch result:', typeMatch);
+            
+            // 查找标签容器
+            const tagsContainer = messageElement.querySelector('.message-tags');
+            const detectedTypesDiv = tagsContainer ? tagsContainer.querySelector('.detected-types') : null;
+            
+            if (typeMatch && detectedTypesDiv) {
+                const types = typeMatch[1].split(',').map(t => t.trim());
+                console.log('Found types:', types);
+                
+                // 创建类型标签HTML
+                const typeTagsHTML = types.map(type => 
+                    `<div class="type-tag">${type}</div>`
+                ).join('');
+                
+                detectedTypesDiv.innerHTML = typeTagsHTML;
+                
+                // 设置类型标签样式
+                const typeTags = detectedTypesDiv.querySelectorAll('.type-tag');
+                typeTags.forEach(tag => {
+                    tag.style.cssText = `
+                        display: inline-block;
+                        padding: 6px 12px;
+                        margin: 2px;
+                        border-radius: 16px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        font-size: 12px;
+                        font-weight: 600;
+                        text-align: center;
+                        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                        transition: all 0.3s ease;
+                        cursor: default;
+                    `;
+                });
+                
+            } else if (detectedTypesDiv && !detectedTypesDiv.hasAttribute('data-updated')) {
+                // 如果没有匹配到类型，但还没有更新过，显示默认信息
+                detectedTypesDiv.innerHTML = `
+                    <div class="type-placeholder" style="
+                        color: #999;
+                        font-size: 11px;
+                        text-align: center;
+                        padding: 8px;
+                        font-style: italic;
+                    ">未检测到题目类型</div>
+                `;
+                detectedTypesDiv.setAttribute('data-updated', 'true');
+            }
+        }
+        
+        // 在流式过程中检测题目类型
+        function checkTypesInStream(text, messageElement) {
+            // 只在文本长度超过50字符时开始检测，避免过早检测
+            if (text.length > 50) {
+                updateTags(text, messageElement);
+            }
+        }
+
+        // 更新AI消息内容并渲染数学公式
+        let mathRenderTimer = null;
+        let currentAIMessageElement = null;
+        
+        function updateAIMessage(contentElement, text, showCursor) {
+            // 添加光标效果（仅在流式更新时）
+            const displayText = showCursor ? text + '▊' : text;
+            
+            if (showCursor) {
+                // 流式更新时，使用纯文本显示，避免抖动
+                contentElement.textContent = displayText;
+                
+                // 清除之前的渲染定时器
+                if (mathRenderTimer) {
+                    clearTimeout(mathRenderTimer);
+                }
+                
+                // 检查是否包含数学公式，如果有则标记需要渲染
+                if (text.includes('$') || text.includes('\\(') || text.includes('\\[') || text.includes('\\boxed')) {
+                    contentElement.classList.add('math');
+                    
+                    // 设置较长的延迟，减少渲染频率
+                    mathRenderTimer = setTimeout(() => {
+                        // 在延迟后再使用innerHTML并渲染数学公式
+                        contentElement.innerHTML = text + '▊';
+                        if (window.MathJax && window.MathJax.typesetPromise) {
+                            MathJax.typesetPromise([contentElement]).catch(function (err) {
+                                console.log('MathJax typeset error: ' + err.message);
+                            });
+                        }
+                    }, 500); // 500ms延迟，降低渲染频率
+                }
+            } else {
+                // 最终渲染，使用innerHTML并立即渲染数学公式
+                // 处理单独的\boxed公式，为其添加数学分隔符
+                let processedText = displayText;
+                
+                // 首先修复不匹配的$符号
+                if (processedText.includes('$')) {
+                    // 计算$的数量
+                    let dollarCount = (processedText.match(/\$/g) || []).length;
+                    
+                    // 如果$的数量是奇数，说明有不匹配的$
+                    if (dollarCount % 2 === 1) {
+                        // 找到最后一个$的位置
+                        let lastDollarIndex = processedText.lastIndexOf('$');
+                        
+                        // 检查最后一个$后面是否有内容需要包含在数学环境中
+                        let afterLastDollar = processedText.substring(lastDollarIndex + 1);
+                        
+                        // 如果后面有数学内容（包含\text或其他数学符号），则添加结束的$
+                        if (afterLastDollar.includes('\\text') || afterLastDollar.includes('n ') || afterLastDollar.trim().endsWith('}')) {
+                            processedText = processedText + '$';
+                        }
+                    }
+                }
+                
+                if (processedText.includes('\\boxed{')) {
+                    // 更复杂的处理：找到所有\boxed公式并检查是否需要添加$
+                    let boxedMatches = [];
+                    let regex = /\\boxed\{[^}]*\}/g;
+                    let match;
+                    
+                    while ((match = regex.exec(processedText)) !== null) {
+                        boxedMatches.push({
+                            match: match[0],
+                            index: match.index,
+                            length: match[0].length
+                        });
+                    }
+                    
+                    // 从后往前处理，避免索引变化
+                    for (let i = boxedMatches.length - 1; i >= 0; i--) {
+                        let boxedMatch = boxedMatches[i];
+                        let beforeIndex = boxedMatch.index;
+                        let afterIndex = boxedMatch.index + boxedMatch.length;
+                        
+                        // 检查前面是否有$
+                        let hasBefore = beforeIndex > 0 && processedText.charAt(beforeIndex - 1) === '$';
+                        // 检查后面是否有$
+                        let hasAfter = afterIndex < processedText.length && processedText.charAt(afterIndex) === '$';
+                        
+                        // 如果前后都没有$，则添加
+                        if (!hasBefore && !hasAfter) {
+                            processedText = processedText.substring(0, beforeIndex) + 
+                                          '$' + boxedMatch.match + '$' + 
+                                          processedText.substring(afterIndex);
+                        }
+                    }
+                }
+                
+                contentElement.innerHTML = processedText;
+                
+                // 清除定时器
+                if (mathRenderTimer) {
+                    clearTimeout(mathRenderTimer);
+                    mathRenderTimer = null;
+                }
+                
+                // 更新标签 - 通过contentElement找到对应的消息元素
+                setTimeout(() => {
+                    const messageElement = contentElement.closest('.message');
+                    console.log('About to call updateTags with:', text);
+                    console.log('Message element:', messageElement);
+                    updateTags(text, messageElement);
+                }, 100);
+                
+                // 检查是否包含数学公式
+                if (text.includes('$') || text.includes('\\(') || text.includes('\\[') || text.includes('\\boxed')) {
+                    contentElement.classList.add('math');
+                    
+                    // 最终渲染 - 确保完整渲染
+                    if (window.MathJax && window.MathJax.typesetPromise) {
+                        setTimeout(() => {
+                            console.log('Final MathJax rendering for:', text.substring(0, 100) + '...');
+                            MathJax.typesetPromise([contentElement]).then(() => {
+                                console.log('MathJax rendering completed');
+                                // 再次渲染以确保所有公式都被处理
+                                setTimeout(() => {
+                                    MathJax.typesetPromise([contentElement]).catch(function (err) {
+                                        console.log('Second MathJax typeset error: ' + err.message);
+                                    });
+                                }, 50);
+                            }).catch(function (err) {
+                                console.log('MathJax typeset error: ' + err.message);
+                            });
+                        }, 200); // 增加延迟确保DOM更新完成
+                    }
+                }
+            }
+        }
+
+        // 添加消息到聊天界面
+        function addMessage(content, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            if (sender === 'ai') {
+                // AI消息包含内容和标签
+                const wrapperDiv = document.createElement('div');
+                wrapperDiv.className = 'message-wrapper';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                updateAIMessage(contentDiv, content, false);
+                
+                const tagsDiv = document.createElement('div');
+                tagsDiv.className = 'message-tags';
+                tagsDiv.innerHTML = `
+                    <div class="tags-title">题目类型</div>
+                    <div class="detected-types">
+                        <div class="type-placeholder">分析中...</div>
+                    </div>
+                `;
+                
+                // 设置检测到的类型区域样式
+                const detectedTypes = tagsDiv.querySelector('.detected-types');
+                detectedTypes.style.cssText = `
+                    padding: 8px;
+                    min-height: 60px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                `;
+                
+                wrapperDiv.appendChild(contentDiv);
+                wrapperDiv.appendChild(tagsDiv);
+                messageDiv.appendChild(wrapperDiv);
+            } else {
+                // 用户消息直接设置文本内容
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.textContent = content;
+                messageDiv.appendChild(contentDiv);
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return messageDiv;
+        }
+
+        // 事件监听
+        sendButton.addEventListener('click', sendMessage);
+        
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            chatInput.focus();
+        });
+    </script>
+</body>
+</html> 
